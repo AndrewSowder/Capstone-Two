@@ -14,8 +14,11 @@ public interface TransfersDao {
 
     void sendTransfer(Transfers transfers);
 
-    // TODO acceptTransfer
+    String getTransferTypeDesc(int id);
 
+    String getTransferStatusDesc(int id);
+
+    // TODO acceptTransfer
 
 
 

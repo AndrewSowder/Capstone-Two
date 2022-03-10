@@ -10,10 +10,10 @@ import java.util.List;
 public class JdbcTransfersDAO implements TransfersDao {
 
     private JdbcTemplate jdbcTemplate;
-    public JdbcTransfersDAO(JdbcTemplate jdbcTemplate){
+
+    public JdbcTransfersDAO(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
-
 
 
     @Override
@@ -65,7 +65,28 @@ public class JdbcTransfersDAO implements TransfersDao {
     }
 
 
+    @Override
+    public String getTransferTypeDesc(int transferTypeId) {
+        String typeDescription = "";
+        String sql = "SELECT transfer_type_desc FROM transfer_type WHERE transfer_type_id = ?;";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, transferTypeId);
+        if (results.next()) {
+            typeDescription = results.getString("transfer_type_id");
+        }
+        return typeDescription;
+    }
 
+    @Override
+    public String getTransferStatusDesc(int statusId) {
+        String statusDescription = "";
+        String sql = "SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = ?;";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, statusId);
+        if (results.next()) {
+            statusDescription = results.getString("transfer_status_id");
+
+        }
+        return statusDescription;
+    }
 
 
     private Transfers mapRowToTransfer(SqlRowSet rowSet) {
@@ -79,4 +100,6 @@ public class JdbcTransfersDAO implements TransfersDao {
 
         return transfers;
     }
+
+
 }
