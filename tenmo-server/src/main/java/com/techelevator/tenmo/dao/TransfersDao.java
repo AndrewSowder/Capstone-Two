@@ -8,11 +8,13 @@ public interface TransfersDao {
 
     List<Transfers> getAllTransfers();
 
-    List<Transfers> getTransfersByTransferId(long transferId);
+    Transfers getTransfersByTransferId(long transferId);
 
     List<Transfers> getTransfersByUserId(int userid);
 
     void sendTransfer(Transfers transfers);
+
+    // TODO acceptTransfer
 
 
 
