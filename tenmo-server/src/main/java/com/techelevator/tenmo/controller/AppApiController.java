@@ -29,37 +29,37 @@ public class AppApiController {
         this.transfersDao = transfersDao;
     }
 
-    @GetMapping("/accounts/balance")
+    @GetMapping("accounts/balance")
     public BigDecimal getBalance(Principal principal){
        int userId =  userDao.findIdByUsername(principal.getName());
        return this.accountDao.getBalanceByUserId(userId);
     }
 
-    @PutMapping("/accounts/balance/{id}")
+    @PutMapping("accounts/balance/{id}")
     public void updateBalance(@RequestBody Accounts accounts, @PathVariable long id) throws AccountNotFoundException {
         this.accountDao.updateBalance(accounts.getAccountId());
     }
 
-    @GetMapping("/accounts/{id}")
+    @GetMapping("accounts/{id}")
     public Accounts getAccountByUserId(@PathVariable int id) throws AccountNotFoundException{
         return this.accountDao.getAccountBy(id);
     }
 
 
 
-    @GetMapping("/account/transfers")
+    @GetMapping("account/transfers")
     public List<Transfers> getAllTransfers(Principal principal){
         int userId = userDao.findIdByUsername(principal.getName());
         return this.transfersDao.getTransfersByUserId(userId);
 
     }
 
-    @PostMapping("/account/transfers")
+    @PostMapping("account/transfers")
     public void sendTransfer(@RequestBody Transfers newTransfer){
         this.transfersDao.sendTransfer(newTransfer);
     }
 
-    @GetMapping("/account/transfers/{id}")
+    @GetMapping("account/transfers/{id}")
     public Transfers getTransfersByTransferId(@PathVariable long id) throws AccountNotFoundException {
         return this.transfersDao.getTransfersByTransferId(id);
     }

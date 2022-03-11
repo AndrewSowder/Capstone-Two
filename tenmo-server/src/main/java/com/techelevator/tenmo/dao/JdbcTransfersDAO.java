@@ -10,9 +10,11 @@ import java.util.List;
 public class JdbcTransfersDAO implements TransfersDao {
 
     private JdbcTemplate jdbcTemplate;
+    private UserDao userDao;
 
-    public JdbcTransfersDAO(JdbcTemplate jdbcTemplate) {
+    public JdbcTransfersDAO(JdbcTemplate jdbcTemplate, UserDao userDao) {
         this.jdbcTemplate = jdbcTemplate;
+        this.userDao = userDao;
     }
 
 
@@ -94,8 +96,8 @@ public class JdbcTransfersDAO implements TransfersDao {
         transfers.setTransferId(rowSet.getLong("transfer_id"));
         transfers.setTransferStatusId(rowSet.getInt("transfer_type_id"));
         transfers.setTransferStatusId(rowSet.getInt("transfer_status_id"));
-        transfers.setAccountFrom(rowSet.getLong("account_from"));
-        transfers.setAccountTo(rowSet.getLong("account_to"));
+        transfers.setAccountFrom(userDao.getUserById(rowSet.getLong("account_from")));
+        transfers.setAccountTo(userDao.getUserById(rowSet.getLong("account_to")));
         transfers.setAmount(rowSet.getBigDecimal("amount"));
 
         return transfers;

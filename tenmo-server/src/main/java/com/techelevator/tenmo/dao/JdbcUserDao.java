@@ -79,6 +79,19 @@ public class JdbcUserDao implements UserDao {
         return true;
     }
 
+    @Override
+    public User getUserById(Long userId) {
+        User user = new User();
+        String sql = "SELECT * FROM tenmo_user WHERE user_id = ?;";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
+        if (results.next()) {
+            user = mapRowToUser(results);
+        } else {
+            System.out.println("User not found");
+        }
+        return user;
+    }
+
     private User mapRowToUser(SqlRowSet rs) {
         User user = new User();
         user.setId(rs.getLong("user_id"));
