@@ -2,8 +2,9 @@ package com.techelevator.tenmo;
 
 import com.techelevator.tenmo.model.AuthenticatedUser;
 import com.techelevator.tenmo.model.UserCredentials;
-import com.techelevator.tenmo.services.AuthenticationService;
-import com.techelevator.tenmo.services.ConsoleService;
+import com.techelevator.tenmo.services.*;
+
+import java.math.BigDecimal;
 
 public class App {
 
@@ -11,15 +12,17 @@ public class App {
 
     private final ConsoleService consoleService = new ConsoleService();
     private final AuthenticationService authenticationService = new AuthenticationService(API_BASE_URL);
+    private final AccountService accountService = new AccountService();
+    private final TransferService transferService = new TransferService();
 
     private AuthenticatedUser currentUser;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws AuthServiceException {
         App app = new App();
         app.run();
     }
 
-    private void run() {
+    private void run() throws AuthServiceException{
         consoleService.printGreeting();
         loginMenu();
         if (currentUser != null) {
@@ -60,7 +63,7 @@ public class App {
         }
     }
 
-    private void mainMenu() {
+    private void mainMenu() throws AuthServiceException {
         int menuSelection = -1;
         while (menuSelection != 0) {
             consoleService.printMainMenu();
@@ -84,8 +87,18 @@ public class App {
         }
     }
 
-	private void viewCurrentBalance() {
-		// TODO Auto-generated method stub
+	private void viewCurrentBalance() throws AuthServiceException {
+		String authToken = currentUser.getToken();
+        BigDecimal balance = null;
+        try {
+            balance = accountService.getBalance(authToken);
+            System.out.println("Your Current Account Balance Is: " + balance);
+        }catch (AuthServiceException e){
+            System.out.println(e.getMessage());
+
+        }
+
+
 		
 	}
 

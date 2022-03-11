@@ -7,7 +7,7 @@ import org.springframework.web.client.RestTemplate;
 
 public class TransferService {
 
-    private static final String API_BASE_URL = "http://localhost:8080/";
+    private static final String API_BASE_URL = "http://localhost:8080/transfers";
     private RestTemplate restTemplate = new RestTemplate();
 
     public static String AUTH_TOKEN = null;
@@ -16,7 +16,7 @@ public class TransferService {
         Transfer[] transfers = null;
         try {
             ResponseEntity<Transfer[]> response =
-                    restTemplate.exchange(API_BASE_URL, HttpMethod.GET, makeAuthEntity(authToken), Transfer[].class);
+                    restTemplate.exchange(API_BASE_URL , HttpMethod.GET, makeAuthEntity(authToken), Transfer[].class);
             transfers = response.getBody();
         } catch (RestClientResponseException e) {
             throw new AuthServiceException(e.getMessage());
@@ -28,7 +28,7 @@ public class TransferService {
         Transfer transfer = null;
         try {
             ResponseEntity<Transfer> response =
-                    restTemplate.exchange(API_BASE_URL + transferId, HttpMethod.GET, makeAuthEntity(authToken), Transfer.class);
+                    restTemplate.exchange(API_BASE_URL + "/" + transferId, HttpMethod.GET, makeAuthEntity(authToken), Transfer.class);
             transfer = response.getBody();
         }catch (RestClientResponseException e){
             throw new AuthServiceException(e.getMessage());
