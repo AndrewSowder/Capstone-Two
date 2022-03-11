@@ -47,19 +47,19 @@ public class AppApiController {
 
 
 
-    @GetMapping("account/transfers")
+    @GetMapping("transfers")
     public List<Transfers> getAllTransfers(Principal principal){
         int userId = userDao.findIdByUsername(principal.getName());
         return this.transfersDao.getTransfersByUserId(userId);
 
     }
 
-    @PostMapping("account/transfers")
+    @PostMapping("transfers")
     public void sendTransfer(@RequestBody Transfers newTransfer){
         this.transfersDao.sendTransfer(newTransfer);
     }
 
-    @GetMapping("account/transfers/{id}")
+    @GetMapping("transfers/{id}")
     public Transfers getTransfersByTransferId(@PathVariable long id) throws AccountNotFoundException {
         return this.transfersDao.getTransfersByTransferId(id);
     }
