@@ -46,6 +46,18 @@ public class TransferService {
         return newTransfer;
     }
 
+    public Transfer[] getTransfersByUserId(long userId, String authToken) throws AuthServiceException {
+        Transfer[] transfers = null;
+        try {
+            ResponseEntity<Transfer[]> response =
+                    restTemplate.exchange(API_BASE_URL, HttpMethod.GET, makeAuthEntity(authToken), Transfer[].class);
+            transfers = response.getBody();
+        } catch (RestClientResponseException e) {
+            throw new AuthServiceException(e.getMessage());
+        }
+        return transfers;
+    }
+
 
 
 

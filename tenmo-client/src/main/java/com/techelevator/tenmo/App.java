@@ -1,10 +1,13 @@
 package com.techelevator.tenmo;
 
 import com.techelevator.tenmo.model.AuthenticatedUser;
+import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.UserCredentials;
 import com.techelevator.tenmo.services.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 public class App {
 
@@ -89,6 +92,7 @@ public class App {
 
 	private void viewCurrentBalance() throws AuthServiceException {
 		String authToken = currentUser.getToken();
+/*        Long userid = currentUser.getUser().getId();*/
         BigDecimal balance = null;
         try {
             balance = accountService.getBalance(authToken);
@@ -103,9 +107,17 @@ public class App {
 	}
 
 	private void viewTransferHistory() {
-		// TODO Auto-generated method stub
-		
-	}
+        String authToken = currentUser.getToken();
+        try {
+            Transfer[] transfers = transferService.getTransfersByUserId(currentUser.getUser().getId(), authToken);
+            for (Transfer transfer : transfers) {
+                System.out.println(transfer.toString());
+            }
+        } catch (AuthServiceException e) {
+            e.printStackTrace();
+        }
+
+    }
 
 	private void viewPendingRequests() {
 		// TODO Auto-generated method stub

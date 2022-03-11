@@ -48,7 +48,7 @@ public class JdbcTransfersDAO implements TransfersDao {
     @Override
     public List<Transfers> getTransfersByUserId(int userid) {
         List<Transfers> transfers = new ArrayList<>();
-        String sql = "SELECT * FROM transfers " +
+        String sql = "SELECT * FROM transfer " +
                 "JOIN account ON transfer.account_from = account.account_id " +
                 "WHERE account.user_id = ?;";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userid);

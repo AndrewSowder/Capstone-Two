@@ -31,7 +31,7 @@ public class AppApiController {
     }
 
     @GetMapping("accounts/balance")
-    public BigDecimal getBalance(Principal principal){
+    public BigDecimal getBalanceByUserId(Principal principal){
        int userId =  userDao.findIdByUsername(principal.getName());
        return this.accountDao.getBalanceByUserId(userId);
     }
@@ -52,7 +52,6 @@ public class AppApiController {
     public List<Transfers> getAllTransfers(Principal principal){
         int userId = userDao.findIdByUsername(principal.getName());
         return this.transfersDao.getTransfersByUserId(userId);
-
     }
 
     @PostMapping("transfers")
@@ -63,6 +62,11 @@ public class AppApiController {
     @GetMapping("transfers/{id}")
     public Transfers getTransfersByTransferId(@PathVariable long id) throws AccountNotFoundException {
         return this.transfersDao.getTransfersByTransferId(id);
+    }
+
+    @GetMapping("transfer")
+    public List<Transfers> getTransferByUserId(@PathVariable int id, Principal principal) {
+        return this.transfersDao.getTransfersByUserId(id);
     }
 
 
