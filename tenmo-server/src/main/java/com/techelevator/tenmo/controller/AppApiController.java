@@ -5,6 +5,7 @@ import com.techelevator.tenmo.dao.TransfersDao;
 import com.techelevator.tenmo.dao.UserDao;
 import com.techelevator.tenmo.model.Accounts;
 import com.techelevator.tenmo.model.Transfers;
+import com.techelevator.tenmo.model.User;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.*;
@@ -36,14 +37,40 @@ public class AppApiController {
        return this.accountDao.getBalanceByUserId(userId);
     }
 
+    @GetMapping("accounts/users")
+    public List<User> listAllUsers(){
+        List<User> allUsers;
+        allUsers = userDao.findAll();
+        return allUsers;
+
+    }
+
+    @GetMapping("accounts/users/{id}")
+    public User getUserById(@PathVariable Long id){
+       User user = userDao.getUserById(id);
+        return user;
+
+    }
+
+    @GetMapping("accounts/users/username/{name}")
+    public Accounts getAccountByUserName(@PathVariable String name){
+        return accountDao.getAccountByUsername(name);
+    }
+
+    @GetMapping("accounts/username/{id}")
+    public String getUsernameByAccountId(@PathVariable Long id) {
+        return this.userDao.findUsernameByAccount(id);
+    }
+
+
     @PutMapping("accounts/balance/{id}")
-    public void updateBalance(@RequestBody Accounts accounts, @PathVariable long id) throws AccountNotFoundException {
-        this.accountDao.updateBalance(accounts.getAccountId());
+    public void updateBalance(@RequestBody Transfers transfers, @PathVariable long transferId) throws AccountNotFoundException {
+        this.accountDao.updateBalances(transfers);
     }
 
     @GetMapping("accounts/{id}")
     public Accounts getAccountByUserId(@PathVariable int id) throws AccountNotFoundException{
-        return this.accountDao.getAccountBy(id);
+        return this.accountDao.getAccountById(id);
     }
 
 
@@ -54,7 +81,7 @@ public class AppApiController {
         return this.transfersDao.getTransfersByUserId(userId);
     }
 
-    @PostMapping("transfers")
+    @PostMapping("transfers/{id}")
     public void sendTransfer(@RequestBody Transfers newTransfer){
         this.transfersDao.sendTransfer(newTransfer);
     }
@@ -64,9 +91,14 @@ public class AppApiController {
         return this.transfersDao.getTransfersByTransferId(id);
     }
 
-    @GetMapping("transfer")
+    @GetMapping("transfers/user/{id}")
     public List<Transfers> getTransferByUserId(@PathVariable int id, Principal principal) {
         return this.transfersDao.getTransfersByUserId(id);
+    }
+
+    @GetMapping("transfers/next")
+    public Long getNewTransferId(){
+        return transfersDao.getNewTransferId();
     }
 
 

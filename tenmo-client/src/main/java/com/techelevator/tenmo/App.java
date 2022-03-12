@@ -1,13 +1,11 @@
 package com.techelevator.tenmo;
 
-import com.techelevator.tenmo.model.AuthenticatedUser;
-import com.techelevator.tenmo.model.Transfer;
-import com.techelevator.tenmo.model.UserCredentials;
+import com.techelevator.tenmo.dao.UserDao;
+import com.techelevator.tenmo.model.*;
 import com.techelevator.tenmo.services.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 public class App {
 
@@ -18,6 +16,7 @@ public class App {
     private final AccountService accountService = new AccountService();
     private final TransferService transferService = new TransferService();
 
+
     private AuthenticatedUser currentUser;
 
     public static void main(String[] args) throws AuthServiceException {
@@ -25,13 +24,14 @@ public class App {
         app.run();
     }
 
-    private void run() throws AuthServiceException{
+    private void run() throws AuthServiceException {
         consoleService.printGreeting();
         loginMenu();
         if (currentUser != null) {
             mainMenu();
         }
     }
+
     private void loginMenu() {
         int menuSelection = -1;
         while (menuSelection != 0 && currentUser == null) {
@@ -90,48 +90,107 @@ public class App {
         }
     }
 
-	private void viewCurrentBalance() throws AuthServiceException {
-		String authToken = currentUser.getToken();
-/*        Long userid = currentUser.getUser().getId();*/
+    private void viewCurrentBalance() throws AuthServiceException {
+        String authToken = currentUser.getToken();
+        /*        Long userid = currentUser.getUser().getId();*/
         BigDecimal balance = null;
         try {
             balance = accountService.getBalance(authToken);
             System.out.println("Your Current Account Balance Is: " + balance);
-        }catch (AuthServiceException e){
+        } catch (AuthServiceException e) {
             System.out.println(e.getMessage());
 
         }
 
 
-		
-	}
+    }
 
-	private void viewTransferHistory() {
+    private void viewTransferHistory() throws AuthServiceException {
         String authToken = currentUser.getToken();
-        try {
-            Transfer[] transfers = transferService.getTransfersByUserId(currentUser.getUser().getId(), authToken);
-            for (Transfer transfer : transfers) {
-                System.out.println(transfer.toString());
-            }
-        } catch (AuthServiceException e) {
-            e.printStackTrace();
-        }
+        System.out.println("------------------------------------------------");
+        System.out.println(" TRANSFERS                                      ");
+        System.out.println(" ID                From/To              Amount  ");
+        System.out.println("------------------------------------------------");
+        displayTransferList(transferService.getAllTransfers(authToken));
+    }
+
+
+    private void viewPendingRequests() {
+        // TODO Auto-generated method stub
 
     }
 
-	private void viewPendingRequests() {
-		// TODO Auto-generated method stub
-		
-	}
+    private void sendBucks() throws AuthServiceException {
+        String authToken = currentUser.getToken();
+        User[] userList = accountService.listAllUsers(authToken);
+        System.out.println("------------------------------------------------");
+        System.out.println(" USER ID              NAME                      ");
+        System.out.println("------------------------------------------------");
 
-	private void sendBucks() {
-		// TODO Auto-generated method stub
-		
-	}
+        for (User user : userList) {
+            System.out.println("  " + user.getId() + "               " + user.getUsername());
+        }
+        Long userId = consoleService.promptForLong("Enter ID of user you are sending to (0 to cancel): ");
 
-	private void requestBucks() {
-		// TODO Auto-generated method stub
-		
-	}
+        if (userId == 0) {
+            mainMenu();
+        } else {
+            try {
+                BigDecimal currentBalance = accountService.getBalance(authToken);
+                BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount:");
+                if (amountEntered.compareTo(currentBalance) > 0) {
+                    System.out.println("Insufficient Balance to Make Transfer");
+                } else {
+                    Transfers newTransfers = createTransfer(currentUser.getUser().getId(), userId, amountEntered);
+                    transferService.sendTransfer(newTransfers.getTransferId(), newTransfers, authToken);
+                    accountService.updateBalances(newTransfers.getTransferId(), newTransfers, authToken);
 
+                    System.out.println(newTransfers.toString());
+                }
+            } catch (RuntimeException e) {
+                System.out.println(e.getStackTrace());
+            }
+        }
+
+
+    }
+
+    private void requestBucks() {
+        // TODO Auto-generated method stub
+
+    }
+
+    public Transfers createTransfer(Long accountFrom, Long accountTo, BigDecimal amount) throws AuthServiceException {
+        String authToken = currentUser.getToken();
+        Long newTransferId= transferService.getNewTransferId(authToken);
+        Transfers transfer = new Transfers();
+        transfer.setTransferId(newTransferId);
+        transfer.setTransferTypeId(2);
+        transfer.setTransferStatusId(2);
+        transfer.setAccountFrom(accountFrom);
+        transfer.setAccountTo(accountTo);
+        transfer.setAmount(amount);
+        return transfer;
+    }
+
+    public void displayTransferList(Transfers[] transferlist) throws AuthServiceException {
+        String authToken = currentUser.getToken();
+        for (Transfers transfer : transferlist) {
+            Long id = transfer.getTransferId();
+
+            String user;
+
+            Accounts account = accountService.getAccountByUserName(currentUser.getUser().getUsername(),authToken);
+            Long accountFrom = account.getAccountId();
+            if (transfer.getAccountFrom().equals(accountFrom)) {
+                user = "From: " + currentUser.getUser().getUsername();
+            } else {
+                user =  "To: " + accountService.getUsernameByAccountId(transfer.getAccountTo(), authToken);
+            }
+            BigDecimal amount = transfer.getAmount();
+
+            System.out.println(id + "               " + user + "            " + amount);
+
+        }
+    }
 }

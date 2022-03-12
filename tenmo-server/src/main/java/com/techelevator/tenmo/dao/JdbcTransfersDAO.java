@@ -49,8 +49,8 @@ public class JdbcTransfersDAO implements TransfersDao {
     public List<Transfers> getTransfersByUserId(int userid) {
         List<Transfers> transfers = new ArrayList<>();
         String sql = "SELECT * FROM transfer " +
-                "JOIN account ON transfer.account_from = account.account_id " +
-                "WHERE account.user_id = ?;";
+                " JOIN account ON transfer.account_from = account.account_id " +
+                " WHERE account.user_id = ?;";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userid);
         while (results.next()) {
             Transfers transfer = mapRowToTransfer(results);
@@ -61,12 +61,11 @@ public class JdbcTransfersDAO implements TransfersDao {
 
     @Override
     public void sendTransfer(Transfers transfers) {
-        String sql = "INSERT INTO transfer " +
-                "(transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount " +
-                "VALUES (?, ?, ?, ?, ?, ?;";
-        jdbcTemplate.update(sql, transfers.getTransferId(), transfers.getTransferTypeId(), transfers.getTransferStatusId(),
-                transfers.getAccountFrom(), transfers.getAccountTo(), transfers.getAmount());
+        String sql = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) " +
+                " VALUES (?, ?, ?, ?, ?)";
+        jdbcTemplate.update(sql, transfers.getTransferTypeId(),transfers.getTransferStatusId(), transfers.getAccountFrom(), transfers.getAccountTo().intValue(), transfers.getAmount());
     }
+
 
 
     @Override
@@ -93,13 +92,26 @@ public class JdbcTransfersDAO implements TransfersDao {
     }
 
 
+    public Long getNewTransferId() {
+        String sql = "SELECT nextval('seq_transfer_id')";
+        SqlRowSet newTranferId = jdbcTemplate.queryForRowSet(sql);
+        if (newTranferId.next()) {
+            return newTranferId.getLong(1);
+        }else{
+            throw new RuntimeException("Blame Drew");
+        }
+    }
+
+
+
+
     private Transfers mapRowToTransfer(SqlRowSet rowSet) {
         Transfers transfers = new Transfers();
         transfers.setTransferId(rowSet.getLong("transfer_id"));
         transfers.setTransferStatusId(rowSet.getInt("transfer_type_id"));
         transfers.setTransferStatusId(rowSet.getInt("transfer_status_id"));
-        transfers.setAccountFrom(userDao.getUserById(rowSet.getLong("account_from")));
-        transfers.setAccountTo(userDao.getUserById(rowSet.getLong("account_to")));
+        transfers.setAccountFrom(rowSet.getLong("account_from"));
+        transfers.setAccountTo(rowSet.getLong("account_to"));
         transfers.setAmount(rowSet.getBigDecimal("amount"));
 
         return transfers;

@@ -33,6 +33,8 @@ public class JdbcUserDao implements UserDao {
         }
     }
 
+
+
     @Override
     public List<User> findAll() {
         List<User> users = new ArrayList<>();
@@ -53,6 +55,12 @@ public class JdbcUserDao implements UserDao {
             return mapRowToUser(rowSet);
         }
         throw new UsernameNotFoundException("User " + username + " was not found.");
+    }
+
+    @Override
+    public String findUsernameByAccount(Long accountNumber) {
+        String sql = "SELECT username from tenmo_user JOIN account on account.user_id = tenmo_user.user_id where account_id = ?;";
+        return jdbcTemplate.queryForObject(sql, String.class, accountNumber);
     }
 
     @Override
@@ -91,6 +99,8 @@ public class JdbcUserDao implements UserDao {
         }
         return user;
     }
+
+
 
     private User mapRowToUser(SqlRowSet rs) {
         User user = new User();

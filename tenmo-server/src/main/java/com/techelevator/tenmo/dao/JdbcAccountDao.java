@@ -1,6 +1,8 @@
 package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.model.Accounts;
+import com.techelevator.tenmo.model.Transfers;
+import com.techelevator.tenmo.model.User;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
@@ -47,8 +49,10 @@ public class JdbcAccountDao implements AccountDao {
         return accounts.getBalance();
     }
 
+
+
     @Override
-    public Accounts getAccountBy(int userId) {
+    public Accounts getAccountById(int userId) {
         Accounts accounts = null;
         String sql = "SELECT * FROM account WHERE user_id = ?;";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
@@ -61,12 +65,29 @@ public class JdbcAccountDao implements AccountDao {
             return accounts;
         }
 
+    @Override
+    public Accounts getAccountByUsername(String userName) {
+        Accounts accounts = null;
+        String sql = "SELECT * FROM account JOIN tenmo_user ON tenmo_user.user_id = account.user_id WHERE username = ?;";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userName);
+        if (results.next()) {
+            accounts = mapRowAccount(results);
+        } else {
+            System.out.println("Account Not Found");
+
+        }
+        return accounts;
+    }
+
+
+
 
     @Override
-    public void updateBalance(Long accountId) {
-        Accounts accounts = new Accounts();
-        String sql = "UPDATE account SET balance = ? WHERE account_id = ? ";
-        jdbcTemplate.update(sql, accounts.getBalance(),accountId);
+    public void updateBalances(Transfers transfers) {
+        String fromSql = "UPDATE account SET balance = (balance - ?) WHERE account_id = ? ";
+        jdbcTemplate.update(fromSql,transfers.getAmount(), transfers.getAccountFrom());
+        String toSql = "UPDATE account SET balance = (balance + ?) WHERE account_id = ? ";
+        jdbcTemplate.update(toSql,transfers.getAmount(), transfers.getAccountTo());
 
     }
 

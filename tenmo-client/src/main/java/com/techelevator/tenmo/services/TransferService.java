@@ -1,22 +1,25 @@
 package com.techelevator.tenmo.services;
 
-import com.techelevator.tenmo.model.Transfer;
+import com.techelevator.tenmo.model.Transfers;
+import org.bouncycastle.jce.provider.symmetric.Grainv1;
 import org.springframework.http.*;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
+
 public class TransferService {
 
-    private static final String API_BASE_URL = "http://localhost:8080/transfers";
+    private static final String API_BASE_URL = "http://localhost:8080/";
     private RestTemplate restTemplate = new RestTemplate();
 
     public static String AUTH_TOKEN = null;
 
-    public Transfer[] getAllTransfers(String authToken) throws AuthServiceException {
-        Transfer[] transfers = null;
+    public Transfers[] getAllTransfers(String authToken) throws AuthServiceException {
+        Transfers[] transfers = null;
         try {
-            ResponseEntity<Transfer[]> response =
-                    restTemplate.exchange(API_BASE_URL , HttpMethod.GET, makeAuthEntity(authToken), Transfer[].class);
+            ResponseEntity<Transfers[]> response =
+                    restTemplate.exchange(API_BASE_URL + "transfers", HttpMethod.GET, makeAuthEntity(authToken), Transfers[].class);
             transfers = response.getBody();
         } catch (RestClientResponseException e) {
             throw new AuthServiceException(e.getMessage());
@@ -24,33 +27,33 @@ public class TransferService {
         return transfers;
     }
 
-    public Transfer getTransfersByTransferId(long transferId, String authToken) throws AuthServiceException{
-        Transfer transfer = null;
+    public Transfers getTransfersByTransferId(long transferId, String authToken) throws AuthServiceException{
+        Transfers transfers = null;
         try {
-            ResponseEntity<Transfer> response =
-                    restTemplate.exchange(API_BASE_URL + "/" + transferId, HttpMethod.GET, makeAuthEntity(authToken), Transfer.class);
-            transfer = response.getBody();
+            ResponseEntity<Transfers> response =
+                    restTemplate.exchange(API_BASE_URL + "transfers/" + transferId, HttpMethod.GET, makeAuthEntity(authToken), Transfers.class);
+            transfers = response.getBody();
         }catch (RestClientResponseException e){
             throw new AuthServiceException(e.getMessage());
         }
-        return transfer;
+        return transfers;
     }
 
-    public Transfer sendTransfer(Transfer transfer, String authToken) throws AuthServiceException{
-        Transfer newTransfer = null;
+    public Transfers sendTransfer(Long transferId, Transfers transfer, String authToken) throws AuthServiceException {
+        Transfers newTransfer = null;
         try {
-            newTransfer = restTemplate.postForObject(API_BASE_URL, makeTransferEntity(transfer, authToken), Transfer.class);
+            newTransfer = restTemplate.postForObject(API_BASE_URL + "transfers/" + transferId, makeTransferEntity(transfer, authToken), Transfers.class);
         } catch (RestClientResponseException e){
             throw new AuthServiceException(e.getMessage());
         }
         return newTransfer;
     }
 
-    public Transfer[] getTransfersByUserId(long userId, String authToken) throws AuthServiceException {
-        Transfer[] transfers = null;
+    public Transfers[] getTransfersByUserId(long userId, String authToken) throws AuthServiceException {
+        Transfers[] transfers = null;
         try {
-            ResponseEntity<Transfer[]> response =
-                    restTemplate.exchange(API_BASE_URL, HttpMethod.GET, makeAuthEntity(authToken), Transfer[].class);
+            ResponseEntity<Transfers[]> response =
+                    restTemplate.exchange(API_BASE_URL+ "transfers/user/" + userId,HttpMethod.GET, makeAuthEntity(authToken), Transfers[].class);
             transfers = response.getBody();
         } catch (RestClientResponseException e) {
             throw new AuthServiceException(e.getMessage());
@@ -58,15 +61,26 @@ public class TransferService {
         return transfers;
     }
 
+    public Long getNewTransferId(String authToken) throws AuthServiceException {
+        Long newTransferId = null;
+        try {
+            ResponseEntity<Long> response = restTemplate.exchange(API_BASE_URL + "transfers/next", HttpMethod.GET, makeAuthEntity(authToken), Long.class);
+            newTransferId = response.getBody();
+        } catch (RestClientResponseException e) {
+            throw new AuthServiceException(e.getMessage());
+        }
+        return newTransferId;
+    }
 
 
 
 
-    private HttpEntity<Transfer> makeTransferEntity(Transfer transfer, String Auth_Token) {
+
+    private HttpEntity<Transfers> makeTransferEntity(Transfers transfers, String Auth_Token) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(Auth_Token);
-        return new HttpEntity<>(transfer, headers);
+        return new HttpEntity<>(transfers, headers);
     }
 
     private HttpEntity<Void> makeAuthEntity(String AUTH_TOKEN) {
