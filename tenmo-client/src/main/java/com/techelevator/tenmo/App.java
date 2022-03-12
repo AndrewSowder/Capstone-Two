@@ -107,11 +107,14 @@ public class App {
 
     private void viewTransferHistory() throws AuthServiceException {
         String authToken = currentUser.getToken();
+        Accounts userAccount = accountService.getAccountByUserName(currentUser.getUser().getUsername(), authToken);
+        Long userAccountId = userAccount.getAccountId();
+        Transfers[] transferlist = transferService.getTransfersByAccount(userAccountId, authToken);
         System.out.println("------------------------------------------------");
         System.out.println(" TRANSFERS                                      ");
         System.out.println(" ID                From/To              Amount  ");
         System.out.println("------------------------------------------------");
-        displayTransferList(transferService.getAllTransfers(authToken));
+        displayTransferList(transferlist);
     }
 
 
@@ -141,7 +144,11 @@ public class App {
                 if (amountEntered.compareTo(currentBalance) > 0) {
                     System.out.println("Insufficient Balance to Make Transfer");
                 } else {
-                    Transfers newTransfers = createTransfer(currentUser.getUser().getId(), userId, amountEntered);
+                    Accounts fromAccount = accountService.getAccountByUserName(currentUser.getUser().getUsername(), authToken);
+                    Long fromAccountId = fromAccount.getAccountId();
+                    Accounts toAccount = accountService.getAccountsByUserId(userId, authToken);
+                    Long toAccountId = toAccount.getAccountId();
+                    Transfers newTransfers = createTransfer(fromAccountId, toAccountId, amountEntered);
                     transferService.sendTransfer(newTransfers.getTransferId(), newTransfers, authToken);
                     accountService.updateBalances(newTransfers.getTransferId(), newTransfers, authToken);
 
@@ -162,7 +169,7 @@ public class App {
 
     public Transfers createTransfer(Long accountFrom, Long accountTo, BigDecimal amount) throws AuthServiceException {
         String authToken = currentUser.getToken();
-        Long newTransferId= transferService.getNewTransferId(authToken);
+        Long newTransferId = transferService.getNewTransferId(authToken);
         Transfers transfer = new Transfers();
         transfer.setTransferId(newTransferId);
         transfer.setTransferTypeId(2);
@@ -176,20 +183,23 @@ public class App {
     public void displayTransferList(Transfers[] transferlist) throws AuthServiceException {
         String authToken = currentUser.getToken();
         for (Transfers transfer : transferlist) {
+
             Long id = transfer.getTransferId();
 
-            String user;
+            String toOrFrom = "";
 
-            Accounts account = accountService.getAccountByUserName(currentUser.getUser().getUsername(),authToken);
-            Long accountFrom = account.getAccountId();
-            if (transfer.getAccountFrom().equals(accountFrom)) {
-                user = "From: " + currentUser.getUser().getUsername();
+            Accounts account = accountService.getAccountByUserName(currentUser.getUser().getUsername(), authToken);
+            Long yourAccountId = account.getAccountId();
+            if (transfer.getAccountFrom().equals(yourAccountId)) {
+
+                toOrFrom = "To: " + accountService.getUsernameByAccountId(transfer.getAccountTo(), authToken);
             } else {
-                user =  "To: " + accountService.getUsernameByAccountId(transfer.getAccountTo(), authToken);
+                toOrFrom = "From: " + accountService.getUsernameByAccountId(transfer.getAccountFrom(), authToken);
             }
             BigDecimal amount = transfer.getAmount();
 
-            System.out.println(id + "               " + user + "            " + amount);
+            System.out.println(id + "               " + toOrFrom + "            " + amount);
+
 
         }
     }

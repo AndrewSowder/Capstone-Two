@@ -44,7 +44,8 @@ public class TransferService {
         try {
             newTransfer = restTemplate.postForObject(API_BASE_URL + "transfers/" + transferId, makeTransferEntity(transfer, authToken), Transfers.class);
         } catch (RestClientResponseException e){
-            throw new AuthServiceException(e.getMessage());
+            System.out.println(e.getMessage());
+
         }
         return newTransfer;
     }
@@ -54,6 +55,18 @@ public class TransferService {
         try {
             ResponseEntity<Transfers[]> response =
                     restTemplate.exchange(API_BASE_URL+ "transfers/user/" + userId,HttpMethod.GET, makeAuthEntity(authToken), Transfers[].class);
+            transfers = response.getBody();
+        } catch (RestClientResponseException e) {
+            throw new AuthServiceException(e.getMessage());
+        }
+        return transfers;
+    }
+
+    public Transfers[] getTransfersByAccount(Long accountId, String authToken) throws AuthServiceException {
+        Transfers[] transfers = null;
+        try {
+            ResponseEntity<Transfers[]> response =
+                    restTemplate.exchange(API_BASE_URL+ "accounts/" + accountId + "/transfers" ,HttpMethod.GET, makeAuthEntity(authToken), Transfers[].class);
             transfers = response.getBody();
         } catch (RestClientResponseException e) {
             throw new AuthServiceException(e.getMessage());
@@ -80,7 +93,8 @@ public class TransferService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setBearerAuth(Auth_Token);
-        return new HttpEntity<>(transfers, headers);
+        HttpEntity<Transfers> entity = new HttpEntity<>(transfers, headers);
+        return entity;
     }
 
     private HttpEntity<Void> makeAuthEntity(String AUTH_TOKEN) {

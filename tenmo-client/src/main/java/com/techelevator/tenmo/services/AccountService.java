@@ -67,14 +67,14 @@ public class AccountService {
     public Transfers updateBalances(Long transferId, Transfers transfers, String authToken) throws AuthServiceException {
         Transfers newTransfers = null;
         try {
-             newTransfers = restTemplate.postForObject(API_BASE_URL + "/balance/" + transferId, makeTransferEntity(transfers, authToken), Transfers.class);
+             newTransfers = restTemplate.postForObject(API_BASE_URL + "/balance/update/" + transferId, makeTransferEntity(transfers, authToken), Transfers.class);
             }catch (RestClientResponseException e){
             throw new AuthServiceException(e.getMessage());
         }
         return newTransfers;
     }
 
-    public Accounts getAccountsByUserId(int id, String authToken) throws AuthServiceException {
+    public Accounts getAccountsByUserId(Long id, String authToken) throws AuthServiceException {
         Accounts accounts = null;
         try {
             ResponseEntity<Accounts> response = restTemplate.exchange(API_BASE_URL + "/" + id, HttpMethod.GET, makeAuthEntity(authToken), Accounts.class);

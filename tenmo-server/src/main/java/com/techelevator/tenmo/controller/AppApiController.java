@@ -63,7 +63,7 @@ public class AppApiController {
     }
 
 
-    @PutMapping("accounts/balance/{id}")
+    @PostMapping("accounts/balance/update/{transferId}")
     public void updateBalance(@RequestBody Transfers transfers, @PathVariable long transferId) throws AccountNotFoundException {
         this.accountDao.updateBalances(transfers);
     }
@@ -81,14 +81,19 @@ public class AppApiController {
         return this.transfersDao.getTransfersByUserId(userId);
     }
 
-    @PostMapping("transfers/{id}")
-    public void sendTransfer(@RequestBody Transfers newTransfer){
+    @PostMapping("transfers/{transferId}")
+    public void sendTransfer(@RequestBody Transfers newTransfer, @PathVariable Long transferId){
         this.transfersDao.sendTransfer(newTransfer);
     }
 
     @GetMapping("transfers/{id}")
     public Transfers getTransfersByTransferId(@PathVariable long id) throws AccountNotFoundException {
         return this.transfersDao.getTransfersByTransferId(id);
+    }
+
+    @GetMapping("accounts/{accountId}/transfers")
+    public List<Transfers> getTransfersByAccount(@PathVariable Long accountId) {
+        return this.transfersDao.getTransfersByAccount(accountId);
     }
 
     @GetMapping("transfers/user/{id}")

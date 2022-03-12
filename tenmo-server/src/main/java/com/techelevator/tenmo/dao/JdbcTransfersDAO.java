@@ -60,10 +60,24 @@ public class JdbcTransfersDAO implements TransfersDao {
     }
 
     @Override
-    public void sendTransfer(Transfers transfers) {
-        String sql = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) " +
-                " VALUES (?, ?, ?, ?, ?)";
-        jdbcTemplate.update(sql, transfers.getTransferTypeId(),transfers.getTransferStatusId(), transfers.getAccountFrom(), transfers.getAccountTo().intValue(), transfers.getAmount());
+    public List<Transfers> getTransfersByAccount(Long accountId) {
+        List<Transfers> transfersByAccount = new ArrayList<>();
+        String sql = "SELECT * from transfer JOIN transfer_status ON transfer_status.transfer_status_id = transfer.transfer_status_id" +
+                " JOIN transfer_type ON transfer_type.transfer_type_id = transfer.transfer_type_id WHERE account_from = ? OR account_to = ?";
+        SqlRowSet results = jdbcTemplate.queryForRowSet(sql, accountId, accountId);
+        while (results.next()) {
+            Transfers transferAcount = mapRowToTransfer(results);
+            transfersByAccount.add(transferAcount);
+        }
+        return transfersByAccount;
+    }
+
+
+
+    @Override
+    public void sendTransfer(Transfers transfer) {
+        String sql = "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) VALUES ( ?, ?, ?, ?, ?)";
+        jdbcTemplate.update(sql, transfer.getTransferTypeId(),transfer.getTransferStatusId(), transfer.getAccountFrom().intValue(), transfer.getAccountTo().intValue(), transfer.getAmount());
     }
 
 
