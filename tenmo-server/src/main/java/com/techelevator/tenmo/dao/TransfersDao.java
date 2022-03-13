@@ -17,13 +17,15 @@ public interface TransfersDao {
 
     void sendTransfer(Transfers transfers);
 
+    /*void updateTransferStatusAndType(int typeId, int statusId, Long  transferId);*/
+
     Long getNewTransferId();
 
     String getTransferTypeDesc(int id);
 
     String getTransferStatusDesc(int id);
 
-    // TODO acceptTransfer
+
 
 
 

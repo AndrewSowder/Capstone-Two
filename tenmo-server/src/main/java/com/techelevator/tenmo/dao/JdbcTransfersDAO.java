@@ -105,6 +105,12 @@ public class JdbcTransfersDAO implements TransfersDao {
         return statusDescription;
     }
 
+    /*@Override
+    public void updateTransferStatusAndType(Transfers transfer, Long transferId) {
+        String sql = "UPDATE transfer SET transfer_type_id = ?,  transfer_status_id WHERE transfer_id = ?;";
+        jdbcTemplate.update(sql,transfer.getTransferTypeId(), transfer.getTransferStatusId(), transferId);
+    }*/
+
 
     public Long getNewTransferId() {
         String sql = "SELECT nextval('seq_transfer_id')";

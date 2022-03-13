@@ -2,6 +2,7 @@ package com.techelevator.tenmo;
 
 import com.techelevator.tenmo.model.*;
 import com.techelevator.tenmo.services.*;
+import org.springframework.web.client.RestClientResponseException;
 
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -115,7 +116,6 @@ public class App {
         displayTransferList(transferlist);
 
         Long transferId = consoleService.promptForLong("Enter ID of transfer ID to view details (0 to cancel): ");
-        Transfers transfers = new Transfers();
         if (transferId == 0) {
             mainMenu();
         } else {
@@ -131,14 +131,45 @@ public class App {
     }
 
 
-    private void viewPendingRequests() {
-        // TODO Auto-generated method stub
+    private void viewPendingRequests() throws AuthServiceException {
+        String authToken = currentUser.getToken();
+        Accounts userAccount = accountService.getAccountByUserName(currentUser.getUser().getUsername(), authToken);
+        Long userAccountId = userAccount.getAccountId();
+        Transfers[] transferlist = transferService.getTransfersByAccount(userAccountId, authToken);
 
+        System.out.println("------------------------------------------------");
+        System.out.println(" PENDING TRANSFERS                              ");
+        System.out.println(" ID                 To                  Amount  ");
+        System.out.println("------------------------------------------------");
+        displayPendingTransferList(transferlist, 1);
+
+        Long transferId = consoleService.promptForLong("Enter ID of transfers ID to approve/reject (0 to cancel): ");
+        if (transferId == 0) {
+            mainMenu();
+        } else {
+            for (Transfers transfer : transferlist) {
+                if (Objects.equals(transfer.getTransferId(), transferId)) {
+                    formattedTransferDetails(transfer);
+                    promptUserToAcceptOrReject();
+                    int userChoice;
+                    userChoice = consoleService.promptForInt("Please choose an option: ");
+                    if (userChoice == 0) {
+                        viewPendingRequests();
+                    } else if (userChoice == 1) {
+                        handleAcceptingRequests(transfer);
+                    } else if (userChoice == 2) {
+                        handleRejectingRequests(transfer);
+                    }
+                }
+            }
+
+        }
     }
 
     private void sendBucks() throws AuthServiceException {
         String authToken = currentUser.getToken();
         User[] userList = accountService.listAllUsers(authToken);
+        Long newTransferId = transferService.getNewTransferId(authToken);
         System.out.println("------------------------------------------------");
         System.out.println(" USER ID              NAME                      ");
         System.out.println("------------------------------------------------");
@@ -161,32 +192,57 @@ public class App {
                     Long fromAccountId = fromAccount.getAccountId();
                     Accounts toAccount = accountService.getAccountsByUserId(userId, authToken);
                     Long toAccountId = toAccount.getAccountId();
-                    Transfers newTransfers = createTransfer(fromAccountId, toAccountId, amountEntered);
+                    int defaultTypeId = 2;
+                    int defaultStatusId = 2;
+                    Transfers newTransfers = createTransfer(newTransferId, defaultTypeId, defaultStatusId, fromAccountId, toAccountId, amountEntered);
                     transferService.sendTransfer(newTransfers.getTransferId(), newTransfers, authToken);
                     accountService.updateBalances(newTransfers.getTransferId(), newTransfers, authToken);
 
                     formattedTransferDetails(newTransfers);
                 }
-            } catch (RuntimeException e) {
-                System.out.println(e.getStackTrace());
+            } catch (RestClientResponseException e) {
+                System.out.println(e.getMessage());
             }
         }
-
-
     }
 
-    private void requestBucks() {
-        // TODO Auto-generated method stub
-
-    }
-
-    public Transfers createTransfer(Long accountFrom, Long accountTo, BigDecimal amount) throws AuthServiceException {
+    private void requestBucks() throws AuthServiceException {
         String authToken = currentUser.getToken();
+        User[] userList = accountService.listAllUsers(authToken);
         Long newTransferId = transferService.getNewTransferId(authToken);
+        System.out.println("------------------------------------------------");
+        System.out.println(" USER ID              NAME                      ");
+        System.out.println("------------------------------------------------");
+
+        for (User user : userList) {
+            System.out.println("  " + user.getId() + "               " + user.getUsername());
+        }
+        Long userId = consoleService.promptForLong("Enter ID of user you are requesting from (0 to cancel): ");
+
+        if (userId == 0) {
+            mainMenu();
+        } else {
+            try {
+                BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount: $");
+                Accounts fromAccount = accountService.getAccountsByUserId(userId, authToken);
+                Long fromAccountId = fromAccount.getAccountId();
+                Accounts toAccount = accountService.getAccountsByUserId(currentUser.getUser().getId(), authToken);
+                Long toAccountId = toAccount.getAccountId();
+                int typeRequest = 1;
+                int defaultPending = 1;
+                Transfers newTransfers = createTransfer(newTransferId, typeRequest, defaultPending, fromAccountId, toAccountId, amountEntered);
+                transferService.sendTransfer(newTransfers.getTransferId(), newTransfers, authToken);
+            } catch (AuthServiceException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public Transfers createTransfer(Long transferId, int typeId, int statusId, Long accountFrom, Long accountTo, BigDecimal amount) throws AuthServiceException {
         Transfers transfer = new Transfers();
-        transfer.setTransferId(newTransferId);
-        transfer.setTransferTypeId(2);
-        transfer.setTransferStatusId(2);
+        transfer.setTransferId(transferId);
+        transfer.setTransferTypeId(typeId);
+        transfer.setTransferStatusId(statusId);
         transfer.setAccountFrom(accountFrom);
         transfer.setAccountTo(accountTo);
         transfer.setAmount(amount);
@@ -217,7 +273,71 @@ public class App {
         }
     }
 
-    public void formattedTransferDetails (Transfers transferDetails) throws AuthServiceException {
+    public void displayPendingTransferList(Transfers[] transferlist, int statusID) throws AuthServiceException {
+        String authToken = currentUser.getToken();
+        for (Transfers transfer : transferlist) {
+            if (transfer.getTransferStatusId() == statusID) {
+                Accounts account = accountService.getAccountByUserName(currentUser.getUser().getUsername(), authToken);
+                Long yourAccountId = account.getAccountId();
+                Long id = transfer.getTransferId();
+
+                String requester = "";
+
+                if (transfer.getAccountTo() != yourAccountId) {
+                    requester = accountService.getUsernameByAccountId(transfer.getAccountTo(), authToken);
+                    BigDecimal amount = transfer.getAmount();
+                    System.out.println(id + "               " + requester + "              $" + amount);
+                } else {
+                    System.out.println();
+                }
+
+            }
+        }
+    }
+
+    public void handleAcceptingRequests(Transfers transfer) throws AuthServiceException {
+        String authToken = currentUser.getToken();
+        BigDecimal userBalance = accountService.getBalance(authToken);
+        BigDecimal requestAmount = transfer.getAmount();
+        int acceptId = 2;
+        int approvedStatus = 2;
+        if (requestAmount.compareTo(userBalance) > 0) {
+            System.out.println("Insufficient funds to complete request");
+        } else {
+            Transfers approvedTransfer = null;
+            approvedTransfer = createTransfer(transfer.getTransferId(), acceptId, approvedStatus,
+                    transfer.getAccountFrom(), transfer.getAccountTo(), transfer.getAmount());
+            transferService.sendTransfer(transfer.getTransferId(), approvedTransfer, authToken);
+            accountService.updateBalances(transfer.getTransferId(), approvedTransfer, authToken);
+            System.out.println("You approved the request");
+        }
+
+    }
+
+    public void handleRejectingRequests(Transfers transfer) throws AuthServiceException {
+        String authToken = currentUser.getToken();
+        int typeId = 1;
+        int rejectedId = 1;
+        Transfers rejectedTransfer = null;
+        rejectedTransfer = createTransfer(transfer.getTransferId(), typeId, rejectedId,
+                transfer.getAccountFrom(), transfer.getAccountTo(), transfer.getAmount());
+        transferService.sendTransfer(transfer.getTransferId(), rejectedTransfer, authToken);
+        System.out.println("You rejected the request");
+
+
+    }
+
+
+    public void promptUserToAcceptOrReject() {
+        System.out.println("1: Approve");
+        System.out.println("2: Reject");
+        System.out.println("0: Don't approve or reject");
+        System.out.println("---------");
+
+    }
+
+
+    public void formattedTransferDetails(Transfers transferDetails) throws AuthServiceException {
         String authToken = currentUser.getToken();
         System.out.println();
         System.out.println("--------------------------------------------");
