@@ -1,6 +1,5 @@
 package com.techelevator.tenmo;
 
-import com.techelevator.tenmo.dao.UserDao;
 import com.techelevator.tenmo.model.*;
 import com.techelevator.tenmo.services.*;
 
@@ -92,11 +91,10 @@ public class App {
 
     private void viewCurrentBalance() throws AuthServiceException {
         String authToken = currentUser.getToken();
-        /*        Long userid = currentUser.getUser().getId();*/
         BigDecimal balance = null;
         try {
             balance = accountService.getBalance(authToken);
-            System.out.println("Your Current Account Balance Is: " + balance);
+            System.out.println("Your Current Account Balance Is: $" + balance);
         } catch (AuthServiceException e) {
             System.out.println(e.getMessage());
 
@@ -115,6 +113,21 @@ public class App {
         System.out.println(" ID                From/To              Amount  ");
         System.out.println("------------------------------------------------");
         displayTransferList(transferlist);
+
+        Long transferId = consoleService.promptForLong("Enter ID of transfer ID to view details (0 to cancel): ");
+        Transfers transfers = new Transfers();
+        if (transferId == 0) {
+            mainMenu();
+        } else {
+            for (Transfers transfer : transferlist) {
+                if (Objects.equals(transfer.getTransferId(), transferId)) {
+                    formattedTransferDetails(transfer);
+                }
+            }
+            /*transfers = transferService.getTransfersByTransferId(transferId, authToken);
+            formattedTransferDetails(transfers);
+            System.out.println(transfers.toString());*/
+        }
     }
 
 
@@ -140,7 +153,7 @@ public class App {
         } else {
             try {
                 BigDecimal currentBalance = accountService.getBalance(authToken);
-                BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount:");
+                BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount: $");
                 if (amountEntered.compareTo(currentBalance) > 0) {
                     System.out.println("Insufficient Balance to Make Transfer");
                 } else {
@@ -152,7 +165,7 @@ public class App {
                     transferService.sendTransfer(newTransfers.getTransferId(), newTransfers, authToken);
                     accountService.updateBalances(newTransfers.getTransferId(), newTransfers, authToken);
 
-                    System.out.println(newTransfers.toString());
+                    formattedTransferDetails(newTransfers);
                 }
             } catch (RuntimeException e) {
                 System.out.println(e.getStackTrace());
@@ -198,9 +211,23 @@ public class App {
             }
             BigDecimal amount = transfer.getAmount();
 
-            System.out.println(id + "               " + toOrFrom + "            " + amount);
+            System.out.println(id + "               " + toOrFrom + "            $" + amount);
 
 
         }
+    }
+
+    public void formattedTransferDetails (Transfers transferDetails) throws AuthServiceException {
+        String authToken = currentUser.getToken();
+        System.out.println();
+        System.out.println("--------------------------------------------");
+        System.out.println("Transfer Details");
+        System.out.println("--------------------------------------------");
+        System.out.println("Id: " + transferDetails.getTransferId());
+        System.out.println("From: " + accountService.getUsernameByAccountId(transferDetails.getAccountFrom(), authToken));
+        System.out.println("To: " + accountService.getUsernameByAccountId(transferDetails.getAccountTo(), authToken));
+        System.out.println("Type: " + transferService.getTransferTypeDesc(transferDetails.getTransferStatusId(), authToken));
+        System.out.println("Status: " + transferService.getTransferStatusDesc(transferDetails.getTransferStatusId(), authToken));
+        System.out.println("Amount: $" + transferDetails.getAmount());
     }
 }

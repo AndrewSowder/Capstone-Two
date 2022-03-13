@@ -66,8 +66,8 @@ public class JdbcTransfersDAO implements TransfersDao {
                 " JOIN transfer_type ON transfer_type.transfer_type_id = transfer.transfer_type_id WHERE account_from = ? OR account_to = ?";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, accountId, accountId);
         while (results.next()) {
-            Transfers transferAcount = mapRowToTransfer(results);
-            transfersByAccount.add(transferAcount);
+            Transfers transferAccount = mapRowToTransfer(results);
+            transfersByAccount.add(transferAccount);
         }
         return transfersByAccount;
     }
@@ -88,7 +88,7 @@ public class JdbcTransfersDAO implements TransfersDao {
         String sql = "SELECT transfer_type_desc FROM transfer_type WHERE transfer_type_id = ?;";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, transferTypeId);
         if (results.next()) {
-            typeDescription = results.getString("transfer_type_id");
+            typeDescription = results.getString("transfer_type_desc");
         }
         return typeDescription;
     }
@@ -99,7 +99,7 @@ public class JdbcTransfersDAO implements TransfersDao {
         String sql = "SELECT transfer_status_desc FROM transfer_status WHERE transfer_status_id = ?;";
         SqlRowSet results = jdbcTemplate.queryForRowSet(sql, statusId);
         if (results.next()) {
-            statusDescription = results.getString("transfer_status_id");
+            statusDescription = results.getString("transfer_status_desc");
 
         }
         return statusDescription;
@@ -122,7 +122,7 @@ public class JdbcTransfersDAO implements TransfersDao {
     private Transfers mapRowToTransfer(SqlRowSet rowSet) {
         Transfers transfers = new Transfers();
         transfers.setTransferId(rowSet.getLong("transfer_id"));
-        transfers.setTransferStatusId(rowSet.getInt("transfer_type_id"));
+        transfers.setTransferTypeId(rowSet.getInt("transfer_type_id"));
         transfers.setTransferStatusId(rowSet.getInt("transfer_status_id"));
         transfers.setAccountFrom(rowSet.getLong("account_from"));
         transfers.setAccountTo(rowSet.getLong("account_to"));

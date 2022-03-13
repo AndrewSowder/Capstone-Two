@@ -85,7 +85,27 @@ public class TransferService {
         return newTransferId;
     }
 
+    public String getTransferTypeDesc(int id, String authToken) throws AuthServiceException {
+        String typeDesc = "";
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(API_BASE_URL + "transfers/type/" + id, HttpMethod.GET, makeAuthEntity(authToken), String.class);
+            typeDesc = response.getBody();
+        } catch (RestClientResponseException e) {
+            throw new AuthServiceException(e.getMessage());
+        }
+        return typeDesc;
+    }
 
+    public String getTransferStatusDesc(int id, String authToken) throws AuthServiceException {
+        String typeStatus = "";
+        try {
+            ResponseEntity<String> response = restTemplate.exchange(API_BASE_URL + "transfers/status/" + id, HttpMethod.GET, makeAuthEntity(authToken), String.class);
+            typeStatus = response.getBody();
+        } catch (RestClientResponseException e) {
+            throw new AuthServiceException(e.getMessage());
+        }
+        return typeStatus;
+    }
 
 
 

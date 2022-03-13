@@ -95,6 +95,7 @@ public class AccountService {
         }
         return account;
     }
+
     public String getUsernameByAccountId(Long id, String authToken) throws AuthServiceException {
         String userName;
         try {

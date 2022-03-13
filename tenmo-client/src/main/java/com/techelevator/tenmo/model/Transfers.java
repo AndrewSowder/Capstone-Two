@@ -77,11 +77,11 @@ public class Transfers {
         return "\n--------------------------------------------" +
                 "\n Transfer Details" +
                 "\n--------------------------------------------" +
-                "\n Id: " + transferTypeId +
+                "\n Id: " + transferId +
                 "\n From: " + accountFrom +
                 "\n To: " + accountTo +
                 "\n Type: " + transferTypeId +
                 "\n Status: " + transferStatusId +
-                "\n Ammount:" + amount ;
+                "\n Amount: $" + amount ;
     }
 }

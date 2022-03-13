@@ -106,6 +106,16 @@ public class AppApiController {
         return transfersDao.getNewTransferId();
     }
 
+    @GetMapping("transfers/type/{id}")
+    public String getTransferTypeDescription(@PathVariable int id) {
+        return this.transfersDao.getTransferTypeDesc(id);
+    }
+
+    @GetMapping("transfers/status/{id}")
+    public String getTransferStatusDescription(@PathVariable int id) {
+        return this.transfersDao.getTransferStatusDesc(id);
+    }
+
 
 
 
