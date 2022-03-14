@@ -50,6 +50,14 @@ public class TransferService {
         return newTransfer;
     }
 
+    public void updateTransfer(Long transferId, Transfers transfer, String authToken) throws AuthServiceException {
+        try {
+            restTemplate.put(API_BASE_URL + "transfers/update/" + transferId, makeTransferEntity(transfer, authToken));
+        } catch (RestClientResponseException e) {
+            System.out.println(e.getResponseBodyAsString());
+        }
+    }
+
     public Transfers[] getTransfersByUserId(long userId, String authToken) throws AuthServiceException {
         Transfers[] transfers = null;
         try {

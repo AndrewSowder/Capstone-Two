@@ -86,10 +86,12 @@ public class AppApiController {
         this.transfersDao.sendTransfer(newTransfer);
     }
 
-    /*@PostMapping("transfers/update/{transferId}")
-    public void updateTransferStatusAndType(@RequestBody Transfers transfers,@PathVariable Long transferId){
-        this.transfersDao.updateTransferStatusAndType();
-    }*/
+    @PutMapping("transfers/update/{transferId}")
+    public void updateTransfer(@RequestBody Transfers newTransfer, @PathVariable Long transferId){
+        this.transfersDao.updateTransfer(newTransfer);
+    }
+
+
 
     @GetMapping("transfers/{id}")
     public Transfers getTransfersByTransferId(@PathVariable long id) throws AccountNotFoundException {

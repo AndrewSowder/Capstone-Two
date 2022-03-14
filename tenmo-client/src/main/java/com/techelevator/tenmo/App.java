@@ -124,9 +124,6 @@ public class App {
                     formattedTransferDetails(transfer);
                 }
             }
-            /*transfers = transferService.getTransfersByTransferId(transferId, authToken);
-            formattedTransferDetails(transfers);
-            System.out.println(transfers.toString());*/
         }
     }
 
@@ -173,14 +170,16 @@ public class App {
         System.out.println("------------------------------------------------");
         System.out.println(" USER ID              NAME                      ");
         System.out.println("------------------------------------------------");
+        displayUserList(userList);
+        System.out.println("------------------------------------------------");
 
-        for (User user : userList) {
-            System.out.println("  " + user.getId() + "               " + user.getUsername());
-        }
         Long userId = consoleService.promptForLong("Enter ID of user you are sending to (0 to cancel): ");
 
         if (userId == 0) {
             mainMenu();
+        }else if (userId.equals(currentUser.getUser().getId())){
+            System.out.println("You cannot send yourself money.");
+            sendBucks();
         } else {
             try {
                 BigDecimal currentBalance = accountService.getBalance(authToken);
@@ -213,14 +212,16 @@ public class App {
         System.out.println("------------------------------------------------");
         System.out.println(" USER ID              NAME                      ");
         System.out.println("------------------------------------------------");
+        displayUserList(userList);
 
-        for (User user : userList) {
-            System.out.println("  " + user.getId() + "               " + user.getUsername());
-        }
+        System.out.println("------------------------------------------------");
         Long userId = consoleService.promptForLong("Enter ID of user you are requesting from (0 to cancel): ");
 
         if (userId == 0) {
             mainMenu();
+        }else if (userId.equals(currentUser.getUser().getId())){
+            System.out.println("You can not request money from yourself");
+            requestBucks();
         } else {
             try {
                 BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount: $");
@@ -231,7 +232,7 @@ public class App {
                 int typeRequest = 1;
                 int defaultPending = 1;
                 Transfers newTransfers = createTransfer(newTransferId, typeRequest, defaultPending, fromAccountId, toAccountId, amountEntered);
-                transferService.sendTransfer(newTransfers.getTransferId(), newTransfers, authToken);
+                transferService.sendTransfer(newTransferId, newTransfers, authToken);
             } catch (AuthServiceException e) {
                 e.printStackTrace();
             }
@@ -279,18 +280,21 @@ public class App {
             if (transfer.getTransferStatusId() == statusID) {
                 Accounts account = accountService.getAccountByUserName(currentUser.getUser().getUsername(), authToken);
                 Long yourAccountId = account.getAccountId();
+
+
                 Long id = transfer.getTransferId();
 
                 String requester = "";
 
-                if (transfer.getAccountTo() != yourAccountId) {
+                if (transfer.getAccountTo().equals(yourAccountId)) {
+                    String user = accountService.getUsernameByAccountId(transfer.getAccountFrom(), authToken);
+                    System.out.println("Your request to " + user + " is still pending.");
+                }else {
                     requester = accountService.getUsernameByAccountId(transfer.getAccountTo(), authToken);
                     BigDecimal amount = transfer.getAmount();
                     System.out.println(id + "               " + requester + "              $" + amount);
-                } else {
-                    System.out.println();
-                }
 
+                }
             }
         }
     }
@@ -307,7 +311,7 @@ public class App {
             Transfers approvedTransfer = null;
             approvedTransfer = createTransfer(transfer.getTransferId(), acceptId, approvedStatus,
                     transfer.getAccountFrom(), transfer.getAccountTo(), transfer.getAmount());
-            transferService.sendTransfer(transfer.getTransferId(), approvedTransfer, authToken);
+            transferService.updateTransfer(transfer.getTransferId(), approvedTransfer, authToken);
             accountService.updateBalances(transfer.getTransferId(), approvedTransfer, authToken);
             System.out.println("You approved the request");
         }
@@ -317,14 +321,20 @@ public class App {
     public void handleRejectingRequests(Transfers transfer) throws AuthServiceException {
         String authToken = currentUser.getToken();
         int typeId = 1;
-        int rejectedId = 1;
+        int rejectedId = 3;
         Transfers rejectedTransfer = null;
         rejectedTransfer = createTransfer(transfer.getTransferId(), typeId, rejectedId,
                 transfer.getAccountFrom(), transfer.getAccountTo(), transfer.getAmount());
-        transferService.sendTransfer(transfer.getTransferId(), rejectedTransfer, authToken);
+        transferService.updateTransfer(transfer.getTransferId(), rejectedTransfer, authToken);
         System.out.println("You rejected the request");
 
 
+    }
+
+    public void displayUserList(User [] userList) {
+        for (User user : userList) {
+            System.out.println("  " + user.getId() + "                " + user.getUsername());
+        }
     }
 
 

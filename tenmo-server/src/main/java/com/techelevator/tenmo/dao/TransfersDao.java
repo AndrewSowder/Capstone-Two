@@ -17,7 +17,7 @@ public interface TransfersDao {
 
     void sendTransfer(Transfers transfers);
 
-    /*void updateTransferStatusAndType(int typeId, int statusId, Long  transferId);*/
+    void updateTransfer(Transfers transfer);
 
     Long getNewTransferId();
 
