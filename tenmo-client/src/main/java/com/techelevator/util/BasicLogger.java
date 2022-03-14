@@ -21,7 +21,7 @@ public class BasicLogger {
 			pw.flush();
 		}
 		catch (FileNotFoundException e) {
-			throw new BasicLoggerException(e.getMessage());
+			System.out.println("Username or password is incorrect");;
 		}
 	}
 

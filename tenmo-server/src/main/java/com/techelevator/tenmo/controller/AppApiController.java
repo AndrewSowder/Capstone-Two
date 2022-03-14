@@ -86,6 +86,11 @@ public class AppApiController {
         this.transfersDao.sendTransfer(newTransfer);
     }
 
+    @PostMapping("transfers")
+    public void createTransfer(@RequestBody Transfers newTransfer){
+        this.transfersDao.createTransfer(newTransfer);
+    }
+
     @PutMapping("transfers/update/{transferId}")
     public void updateTransfer(@RequestBody Transfers newTransfer, @PathVariable Long transferId){
         this.transfersDao.updateTransfer(newTransfer);

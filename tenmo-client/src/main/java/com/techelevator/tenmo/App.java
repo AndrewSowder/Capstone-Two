@@ -177,31 +177,37 @@ public class App {
 
         if (userId == 0) {
             mainMenu();
-        }else if (userId.equals(currentUser.getUser().getId())){
+        } else if (userId.equals(currentUser.getUser().getId())) {
             System.out.println("You cannot send yourself money.");
             sendBucks();
         } else {
-            try {
-                BigDecimal currentBalance = accountService.getBalance(authToken);
-                BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount: $");
-                if (amountEntered.compareTo(currentBalance) > 0) {
-                    System.out.println("Insufficient Balance to Make Transfer");
-                } else {
-                    Accounts fromAccount = accountService.getAccountByUserName(currentUser.getUser().getUsername(), authToken);
-                    Long fromAccountId = fromAccount.getAccountId();
+            BigDecimal currentBalance = accountService.getBalance(authToken);
+            BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount: $");
+            if (amountEntered.compareTo(currentBalance) > 0) {
+                System.out.println("Insufficient Balance to Make Transfer");
+            } else if (amountEntered.longValue() == (0)) {
+                System.out.println("Please enter an amount greater than $0");
+            } else {
+                try {
+                Accounts fromAccount = accountService.getAccountByUserName(currentUser.getUser().getUsername(), authToken);
+                Long fromAccountId = fromAccount.getAccountId();
                     Accounts toAccount = accountService.getAccountsByUserId(userId, authToken);
                     Long toAccountId = toAccount.getAccountId();
+
+
                     int defaultTypeId = 2;
                     int defaultStatusId = 2;
                     Transfers newTransfers = createTransfer(newTransferId, defaultTypeId, defaultStatusId, fromAccountId, toAccountId, amountEntered);
-                    transferService.sendTransfer(newTransfers.getTransferId(), newTransfers, authToken);
+                    transferService.sendTransfer(newTransfers.getTransferId(),newTransfers, authToken);
                     accountService.updateBalances(newTransfers.getTransferId(), newTransfers, authToken);
 
                     formattedTransferDetails(newTransfers);
+
+                } catch (NullPointerException e) {
+                    System.out.println("You entered an invalid User ID.");
                 }
-            } catch (RestClientResponseException e) {
-                System.out.println(e.getMessage());
             }
+
         }
     }
 
@@ -215,31 +221,43 @@ public class App {
         displayUserList(userList);
 
         System.out.println("------------------------------------------------");
+
         Long userId = consoleService.promptForLong("Enter ID of user you are requesting from (0 to cancel): ");
 
         if (userId == 0) {
             mainMenu();
-        }else if (userId.equals(currentUser.getUser().getId())){
+        } else if (userId.equals(currentUser.getUser().getId())) {
             System.out.println("You can not request money from yourself");
             requestBucks();
         } else {
-            try {
-                BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount: $");
-                Accounts fromAccount = accountService.getAccountsByUserId(userId, authToken);
-                Long fromAccountId = fromAccount.getAccountId();
-                Accounts toAccount = accountService.getAccountsByUserId(currentUser.getUser().getId(), authToken);
-                Long toAccountId = toAccount.getAccountId();
-                int typeRequest = 1;
-                int defaultPending = 1;
-                Transfers newTransfers = createTransfer(newTransferId, typeRequest, defaultPending, fromAccountId, toAccountId, amountEntered);
-                transferService.sendTransfer(newTransferId, newTransfers, authToken);
-            } catch (AuthServiceException e) {
-                e.printStackTrace();
+            BigDecimal currentBalance = accountService.getBalance(authToken);
+            BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount: $");
+            if (amountEntered.compareTo(currentBalance) > 0) {
+                System.out.println("Insufficient Balance to Make Transfer");
+            } else if (amountEntered.longValue() == (0)) {
+                System.out.println("Please enter an amount greater than $0");
+            } else {
+                try {
+                    Accounts fromAccount = accountService.getAccountsByUserId(userId, authToken);
+                    Long fromAccountId = fromAccount.getAccountId();
+                    Accounts toAccount = accountService.getAccountsByUserId(currentUser.getUser().getId(), authToken);
+                    Long toAccountId = toAccount.getAccountId();
+                    int typeRequest = 1;
+                    int defaultPending = 1;
+                    Transfers newTransfers = createTransfer(newTransferId, typeRequest, defaultPending, fromAccountId, toAccountId, amountEntered);
+                    transferService.sendTransfer(newTransfers.getTransferId(), newTransfers, authToken);
+                    formattedTransferDetails(newTransfers);
+                } catch (NullPointerException e) {
+                    System.out.println("You entered an invalid User ID.");
+                }
             }
+
         }
+
     }
 
-    public Transfers createTransfer(Long transferId, int typeId, int statusId, Long accountFrom, Long accountTo, BigDecimal amount) throws AuthServiceException {
+    public Transfers createTransfer(Long transferId, int typeId, int statusId, Long accountFrom, Long
+            accountTo, BigDecimal amount) throws AuthServiceException {
         Transfers transfer = new Transfers();
         transfer.setTransferId(transferId);
         transfer.setTransferTypeId(typeId);
@@ -289,7 +307,7 @@ public class App {
                 if (transfer.getAccountTo().equals(yourAccountId)) {
                     String user = accountService.getUsernameByAccountId(transfer.getAccountFrom(), authToken);
                     System.out.println("Your request to " + user + " is still pending.");
-                }else {
+                } else {
                     requester = accountService.getUsernameByAccountId(transfer.getAccountTo(), authToken);
                     BigDecimal amount = transfer.getAmount();
                     System.out.println(id + "               " + requester + "              $" + amount);
@@ -314,6 +332,7 @@ public class App {
             transferService.updateTransfer(transfer.getTransferId(), approvedTransfer, authToken);
             accountService.updateBalances(transfer.getTransferId(), approvedTransfer, authToken);
             System.out.println("You approved the request");
+            formattedTransferDetails(approvedTransfer);
         }
 
     }
@@ -327,11 +346,12 @@ public class App {
                 transfer.getAccountFrom(), transfer.getAccountTo(), transfer.getAmount());
         transferService.updateTransfer(transfer.getTransferId(), rejectedTransfer, authToken);
         System.out.println("You rejected the request");
+        formattedTransferDetails(rejectedTransfer);
 
 
     }
 
-    public void displayUserList(User [] userList) {
+    public void displayUserList(User[] userList) {
         for (User user : userList) {
             System.out.println("  " + user.getId() + "                " + user.getUsername());
         }

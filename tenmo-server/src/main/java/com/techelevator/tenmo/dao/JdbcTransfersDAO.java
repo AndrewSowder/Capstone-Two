@@ -81,6 +81,17 @@ public class JdbcTransfersDAO implements TransfersDao {
     }
 
     @Override
+    public Transfers createTransfer(Transfers transfer) {
+        final String sql =
+                "INSERT INTO transfer (transfer_type_id, transfer_status_id, account_from, account_to, amount) " +
+                        " VALUES ( ?, ?, ?, ?, ?) RETURNING transfer_id;";
+        Long idAssigned = this.jdbcTemplate.queryForObject(sql, Long.class,
+                transfer.getTransferTypeId(), transfer.getTransferStatusId(), transfer.getAccountFrom(),transfer.getAccountTo(),transfer.getAmount());
+
+        return this.getTransfersByTransferId(idAssigned);
+    }
+
+    @Override
     public void updateTransfer(Transfers transfer) {
         final String sql =
                 "UPDATE transfer" +
@@ -120,12 +131,6 @@ public class JdbcTransfersDAO implements TransfersDao {
         }
         return statusDescription;
     }
-
-    /*@Override
-    public void updateTransferStatusAndType(Transfers transfer, Long transferId) {
-        String sql = "UPDATE transfer SET transfer_type_id = ?,  transfer_status_id WHERE transfer_id = ?;";
-        jdbcTemplate.update(sql,transfer.getTransferTypeId(), transfer.getTransferStatusId(), transferId);
-    }*/
 
 
     public Long getNewTransferId() {
