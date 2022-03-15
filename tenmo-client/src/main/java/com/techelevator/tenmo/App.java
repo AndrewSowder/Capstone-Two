@@ -166,13 +166,11 @@ public class App {
     private void sendBucks() throws AuthServiceException {
         String authToken = currentUser.getToken();
         User[] userList = accountService.listAllUsers(authToken);
-        Long newTransferId = transferService.getNewTransferId(authToken);
         System.out.println("------------------------------------------------");
         System.out.println(" USER ID              NAME                      ");
         System.out.println("------------------------------------------------");
         displayUserList(userList);
         System.out.println("------------------------------------------------");
-
         Long userId = consoleService.promptForLong("Enter ID of user you are sending to (0 to cancel): ");
 
         if (userId == 0) {
@@ -185,26 +183,25 @@ public class App {
             BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount: $");
             if (amountEntered.compareTo(currentBalance) > 0) {
                 System.out.println("Insufficient Balance to Make Transfer");
-            } else if (amountEntered.longValue() == (0)) {
+            } else if (amountEntered.longValue() <= (0)) {
                 System.out.println("Please enter an amount greater than $0");
+                sendBucks();
             } else {
                 try {
                 Accounts fromAccount = accountService.getAccountByUserName(currentUser.getUser().getUsername(), authToken);
                 Long fromAccountId = fromAccount.getAccountId();
                     Accounts toAccount = accountService.getAccountsByUserId(userId, authToken);
                     Long toAccountId = toAccount.getAccountId();
-
-
                     int defaultTypeId = 2;
                     int defaultStatusId = 2;
+                    Long newTransferId = transferService.getNewTransferId(authToken);
                     Transfers newTransfers = createTransfer(newTransferId, defaultTypeId, defaultStatusId, fromAccountId, toAccountId, amountEntered);
                     transferService.sendTransfer(newTransfers.getTransferId(),newTransfers, authToken);
                     accountService.updateBalances(newTransfers.getTransferId(), newTransfers, authToken);
-
                     formattedTransferDetails(newTransfers);
-
                 } catch (NullPointerException e) {
                     System.out.println("You entered an invalid User ID.");
+                    sendBucks();
                 }
             }
 
@@ -214,12 +211,10 @@ public class App {
     private void requestBucks() throws AuthServiceException {
         String authToken = currentUser.getToken();
         User[] userList = accountService.listAllUsers(authToken);
-        Long newTransferId = transferService.getNewTransferId(authToken);
         System.out.println("------------------------------------------------");
         System.out.println(" USER ID              NAME                      ");
         System.out.println("------------------------------------------------");
         displayUserList(userList);
-
         System.out.println("------------------------------------------------");
 
         Long userId = consoleService.promptForLong("Enter ID of user you are requesting from (0 to cancel): ");
@@ -234,8 +229,9 @@ public class App {
             BigDecimal amountEntered = consoleService.promptForBigDecimal("Enter amount: $");
             if (amountEntered.compareTo(currentBalance) > 0) {
                 System.out.println("Insufficient Balance to Make Transfer");
-            } else if (amountEntered.longValue() == (0)) {
+            } else if (amountEntered.longValue() <= (0)) {
                 System.out.println("Please enter an amount greater than $0");
+                requestBucks();
             } else {
                 try {
                     Accounts fromAccount = accountService.getAccountsByUserId(userId, authToken);
@@ -244,11 +240,13 @@ public class App {
                     Long toAccountId = toAccount.getAccountId();
                     int typeRequest = 1;
                     int defaultPending = 1;
+                    Long newTransferId = transferService.getNewTransferId(authToken);
                     Transfers newTransfers = createTransfer(newTransferId, typeRequest, defaultPending, fromAccountId, toAccountId, amountEntered);
                     transferService.sendTransfer(newTransfers.getTransferId(), newTransfers, authToken);
                     formattedTransferDetails(newTransfers);
                 } catch (NullPointerException e) {
                     System.out.println("You entered an invalid User ID.");
+                    requestBucks();
                 }
             }
 
